@@ -1,0 +1,6 @@
+name: OresomeAdmin
+main: com.oresomecraft.OresomeAdmin.OresomeAdmin
+version: 1.0
+load: STARTUP
+loadbefore: [Essentials]
+# Commands are not defined here. We use sk89q's command framework!
