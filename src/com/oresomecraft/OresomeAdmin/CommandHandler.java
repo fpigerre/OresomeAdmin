@@ -11,6 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.oresomecraft.OresomeAdmin.database.MySQL;
 import com.sk89q.minecraft.util.commands.*;
 
 public class CommandHandler {
@@ -32,18 +33,29 @@ public class CommandHandler {
 	    desc = "Bans a user from the server.")
     @CommandPermissions({"oresomeadmin.ban"})
     public void ban(CommandContext args, CommandSender sender) throws CommandException, SQLException {
+
+	MySQL mysql = new MySQL(plugin.getLogger(),
+		"[OresomeBattles]", plugin.mysql_host,
+		plugin.mysql_port, plugin.mysql_db,
+		plugin.mysql_user, plugin.mysql_password);
+
 	if (args.argsLength() < 2) {
 	    sender.sendMessage(RED + "Please specify a user and reason!");
 	    sender.sendMessage(RED + "Correct usage: /ban <UserName> <Reason>");
+	    
 	} else {
-	    plugin.mysql.open();
-	    ResultSet rs = plugin.mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+args.getString(0)+"'");
+	    
+	    String username = args.getString(0);
+	    String reason = args.getString(1);
+	    
+	    mysql.open();
+	    ResultSet rs = mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+username+"'");
 	    if (rs.next()) {
 
 		if (rs.getBoolean(7)) {
-		    plugin.mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
+		    mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ username +"'");
 		    while (rs.next()) {
-			plugin.mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
+			mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ username +"'");
 		    }
 		    sender.sendMessage(RED + "Warning: This user had already had an active permanent ban in place!");
 		}
@@ -53,24 +65,23 @@ public class CommandHandler {
 	    Date date = new Date();
 	    String Date = dateFormat.format(date);
 
-	    plugin.mysql.query("INSERT INTO "+plugin.table_name+
+	    mysql.query("INSERT INTO "+plugin.table_name+
 		    " (server, username, reason, ban_date, moderator, active, type) VALUES ('" + plugin.server_name + "', '" 
-		    + args.getString(0) + "','" + args.getJoinedStrings(1) + "', '"+Date+"', '"+sender.getName()+"', 'true', 'PermaBan') ");
+		    + username + "','" + reason.replaceAll("'", "\'") + "', '"+Date+"', '"+sender.getName()+"', 'true', 'PermaBan') ");
 
 	    for (Player p : Bukkit.getOnlinePlayers()) {
-		if (p.getName().equals(args.getString(0))) {
-		    p.kickPlayer("Banned: " + args.getJoinedStrings(1));
+		if (p.getName().equals(username)) {
+		    p.kickPlayer(ChatColor.ITALIC+""+ChatColor.DARK_AQUA+ChatColor.ITALIC + "\n [You have been banned] \n \n" 
+			    + ChatColor.RED + reason);
 		}
 	    }
 
-	    BanEvent event = new BanEvent(plugin.server_name, args.getString(0), args.getJoinedStrings(1),sender.getName(), true);
+	    BanEvent event = new BanEvent(plugin.server_name, username, reason, sender.getName(), true);
 	    plugin.getServer().getPluginManager().callEvent(event);
 	}
 
-	plugin.mysql.close();
+	mysql.close();
     }
-
-
 
     @Command(aliases = {"kick"}, 
 	    usage = "/kick <Username> <Reason>",
@@ -80,6 +91,7 @@ public class CommandHandler {
 	if (args.argsLength() < 2) {
 	    sender.sendMessage(RED + "Please specify a user and reason!");
 	    sender.sendMessage(RED + "Correct usage: /kick <UserName> <Reason>");
+
 	} else {
 
 	    for (final Player p : Bukkit.getOnlinePlayers()) {
@@ -88,15 +100,16 @@ public class CommandHandler {
 		    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
 			@Override
 			public void run() {
-			    p.kickPlayer("Kicked: " + args.getJoinedStrings(1));
+			    p.kickPlayer(ChatColor.ITALIC+""+ChatColor.DARK_AQUA+ChatColor.ITALIC + "\n [You have been kicked] \n \n" 
+				    + ChatColor.RED + args.getJoinedStrings(1));
 			}
 		    }, 5L);
-
+		    
 		    KickEvent event = new KickEvent(plugin.server_name, args.getString(0), args.getJoinedStrings(1),sender.getName());
 		    plugin.getServer().getPluginManager().callEvent(event); 
+		    break;
 		} else {
 		    sender.sendMessage(RED + "Specified user is not online!");
-		    break;
 		}
 	    }
 
@@ -109,20 +122,26 @@ public class CommandHandler {
 	    desc = "Unban a user from the server.")
     @CommandPermissions({"oresomeadmin.unban"})
     public void unban(CommandContext args, CommandSender sender) throws CommandException, SQLException {
+
+	MySQL mysql = new MySQL(plugin.getLogger(),
+		"[OresomeBattles]", plugin.mysql_host,
+		plugin.mysql_port, plugin.mysql_db,
+		plugin.mysql_user, plugin.mysql_password);
+
 	if (args.argsLength() < 1) {
 	    sender.sendMessage(ChatColor.RED + "Please specify a user!");
 	    sender.sendMessage(ChatColor.RED + "Correct usage: /unban <UserName>");
 	} else {
-	    plugin.mysql.open();
-	    ResultSet rs = plugin.mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+args.getString(0)+"'");
+	    mysql.open();
+	    ResultSet rs = mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+args.getString(0)+"'");
 	    if (rs.next()) {
-		plugin.mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
+		mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
 		sender.sendMessage(RED + "Unbanned user " + AQUA + args.getString(0));
 	    }
 	    while (rs.next()) {
-		plugin.mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
+		mysql.query("UPDATE "+ plugin.table_name +" SET active = '"+false+"' WHERE username='"+ args.getString(0) +"'");
 	    }
-	    plugin.mysql.close();
+	    mysql.close();
 	}
     }
 
@@ -131,13 +150,19 @@ public class CommandHandler {
 	    desc = "View previous punishments of a player.")
     @CommandPermissions({"oresomeadmin.rap"})
     public void rap(CommandContext args, CommandSender sender) throws CommandException, SQLException {
+
+	MySQL mysql = new MySQL(plugin.getLogger(),
+		"[OresomeBattles]", plugin.mysql_host,
+		plugin.mysql_port, plugin.mysql_db,
+		plugin.mysql_user, plugin.mysql_password);
+
 	if (args.argsLength() < 1) {
 	    sender.sendMessage(ChatColor.RED + "Please specify a user!");
 	    sender.sendMessage(ChatColor.RED + "Correct usage: /rap <UserName>");
 	} else {
 
-	    plugin.mysql.open();
-	    ResultSet rs = plugin.mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+args.getString(0)+"'");
+	    mysql.open();
+	    ResultSet rs = mysql.query("SELECT * FROM "+plugin.table_name+" WHERE username='"+args.getString(0)+"'");
 	    if (rs.next()) {
 
 		String server = rs.getString(2);
@@ -163,7 +188,7 @@ public class CommandHandler {
 		sender.sendMessage(ChatColor.RED + "Specified user has no previous punishments!");
 	    }
 
-	    plugin.mysql.close();
+	    mysql.close();
 	}
     }
 
@@ -172,29 +197,39 @@ public class CommandHandler {
 	    desc = "Warns a user on the server.")
     @CommandPermissions({"oresomeadmin.warn"})
     public void warn(CommandContext args, CommandSender sender) throws CommandException {
+
+	MySQL mysql = new MySQL(plugin.getLogger(),
+		"[OresomeBattles]", plugin.mysql_host,
+		plugin.mysql_port, plugin.mysql_db,
+		plugin.mysql_user, plugin.mysql_password);
+
 	if (args.argsLength() < 1) {
 	    sender.sendMessage(ChatColor.RED + "Please specify a user and warn message!");
 	    sender.sendMessage(ChatColor.RED + "Correct usage: /warn <UserName> <Warning>");
 	} else {
-	    plugin.mysql.open();
+	    
+	    String username = args.getString(0);
+	    String reason = args.getString(1);
+	    
+	    mysql.open();
 	    for (Player p : Bukkit.getOnlinePlayers()) {
-		if (p.getName().equals(args.getString(0))) {
+		if (p.getName().equals(username)) {
 
 		    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 		    Date date = new Date();
 		    String Date = dateFormat.format(date);
 
-		    p.sendMessage(GOLD + "[Warn] " + GREEN + "Moderator " + AQUA + sender.getName() + GREEN 
-			    + " has warned you: " + GOLD + args.getJoinedStrings(1));
+		    p.sendMessage(GOLD + "[Warn] " + DAQUA + "Moderator " + AQUA + sender.getName() + DAQUA 
+			    + " has warned you: " + GOLD + reason);
 
-		    plugin.mysql.query("INSERT INTO "+plugin.table_name+
+		    mysql.query("INSERT INTO "+plugin.table_name+
 			    " (server, username, reason, ban_date, moderator, active, type) VALUES ('" + plugin.server_name + "', '" 
-			    + args.getString(0) + "','" + args.getJoinedStrings(1) + "', '"+Date+"', '"+sender.getName()+"', 'false', 'Warning') ");
+			    + username + "','" + reason.replaceAll("'", "") + "', '"+Date+"', '"+sender.getName()+"', 'false', 'Warning') ");
 		} else {
-		    sender.sendMessage(RED + "User is not online! Perhaps /mail them or take more serious action.");
+		    sender.sendMessage(RED + "User is not online! If issue persists please consider further action.");
 		}
 	    }
-	    plugin.mysql.close();
+	    mysql.close();
 	}
     }
 }

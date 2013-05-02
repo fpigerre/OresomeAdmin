@@ -15,6 +15,12 @@ import com.oresomecraft.OresomeAdmin.database.*;
 import com.sk89q.bukkit.util.CommandsManagerRegistration;
 import com.sk89q.minecraft.util.commands.*;
 
+/**
+ * OresomeAdmin | OresomeCraft administation plugin
+ * 
+ * @author Zach De Koning (Zachoz)
+ */
+
 public class OresomeAdmin extends JavaPlugin {
 
     private CommandsManager<CommandSender> commands;
