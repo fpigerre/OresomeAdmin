@@ -29,15 +29,15 @@ public class GlobalListener implements Listener {
     @EventHandler
     public void onBan(BanEvent event) {
 	if (event.isPerma()) {
-	    Bukkit.broadcastMessage(GOLD + event.getMod() + DARK_AQUA + " >> " + RED + "banned" +
-		    DARK_AQUA + " >> " + GOLD + event.getUser() + DARK_AQUA + " >> " + GREEN + event.getReason());
+	    Bukkit.broadcastMessage(GOLD + event.getMod() + DARK_AQUA + " » " + RED + "banned" +
+		    DARK_AQUA + " » " + GOLD + event.getUser() + DARK_AQUA + " » " + GREEN + event.getReason());
 	}
     }
 
     @EventHandler
     public void onKick(KickEvent event) {
-	Bukkit.broadcastMessage(GOLD + event.getMod() + DARK_AQUA + " >> " + RED + "kicked" +
-		DARK_AQUA + " >> " + GOLD + event.getUser() + DARK_AQUA + " >> " + GREEN + event.getReason());
+	Bukkit.broadcastMessage(GOLD + event.getMod() + DARK_AQUA + " » " + RED + "kicked" +
+		DARK_AQUA + " » " + GOLD + event.getUser() + DARK_AQUA + " » " + GREEN + event.getReason());
     }
 
     @EventHandler
