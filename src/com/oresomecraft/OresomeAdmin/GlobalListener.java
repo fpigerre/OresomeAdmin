@@ -2,7 +2,6 @@ package com.oresomecraft.OresomeAdmin;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import net.md_5.bungee.api.ProxyServer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
